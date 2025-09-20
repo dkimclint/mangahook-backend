@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manga Hook</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>📚 Manga Hook</h1>
+    <p>Read your favorite manhwa & manga online</p>
+  </header>
+
+  <main>
+    <section id="manga-list">
+      <h2>Latest Manga</h2>
+      <div id="manga-container" class="grid"></div>
+    </section>
+
+    <section id="chapter-list" style="display:none;">
+      <h2 id="chapter-title">Chapters</h2>
+      <div id="chapters-container"></div>
+      <button id="back-btn">⬅️ Back to Manga List</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>Powered by Railway 🚂</p>
+  </footer>
+
+  <script>
+    const mangaContainer = document.getElementById("manga-container");
+    const chaptersSection = document.getElementById("chapter-list");
+    const chaptersContainer = document.getElementById("chapters-container");
+    const backBtn = document.getElementById("back-btn");
+    const chapterTitle = document.getElementById("chapter-title");
+
+    // ✅ Fetch manga list
+    function loadMangaList() {
+      fetch("/api/mangaList")
+        .then(res => res.json())
+        .then(data => {
+          mangaContainer.innerHTML = "";
+          data.mangaList.forEach(manga => {
+            const card = document.createElement("div");
+            card.classList.add("card");
+            card.innerHTML = `
+              <img src="${manga.image}" alt="${manga.title}">
+              <h3>${manga.title}</h3>
+              <p>${manga.description}</p>
+              <p><strong>${manga.view} views</strong></p>
+              <button class="view-chapters" data-id="${manga.id}">View Chapters</button>
+            `;
+            mangaContainer.appendChild(card);
+          });
+
+          // ✅ Attach click events
+          document.querySelectorAll(".view-chapters").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+              const id = e.target.getAttribute("data-id");
+              loadChapters(id);
+            });
+          });
+        })
+        .catch(err => {
+          mangaContainer.innerHTML = `<p class="error">Failed to load manga list 😢</p>`;
+          console.error(err);
+        });
+    }
+
+    // ✅ Fetch chapters by manga ID
+    function loadChapters(mangaId) {
+      fetch(`/api/manga/${mangaId}/chapters`)
+        .then(res => res.json())
+        .then(data => {
+          chaptersContainer.innerHTML = "";
+          data.chapters.forEach(chapter => {
+            const div = document.createElement("div");
+            div.classList.add("chapter");
+            div.innerHTML = `<p>${chapter.title}</p>`;
+            chaptersContainer.appendChild(div);
+          });
+
+          // Switch view
+          document.getElementById("manga-list").style.display = "none";
+          chaptersSection.style.display = "block";
+          chapterTitle.textContent = `Chapters for Manga ID: ${mangaId}`;
+        })
+        .catch(err => {
+          chaptersContainer.innerHTML = `<p class="error">Failed to load chapters 😢</p>`;
+          console.error(err);
+        });
+    }
+
+    // ✅ Back button
+    backBtn.addEventListener("click", () => {
+      chaptersSection.style.display = "none";
+      document.getElementById("manga-list").style.display = "block";
+    });
+
+    // ✅ Init
+    loadMangaList();
+  </script>
+</body>
+</html>

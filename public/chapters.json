@@ -1,0 +1,53 @@
+[
+  {
+    "manhwa": "Solo Leveling",
+    "chapters": [
+      {
+        "title": "Chapter 1",
+        "image": "images/solo-leveling.jpg",
+        "description": "The beginning of Sung Jin-Woo’s journey...",
+        "link": "#"
+      },
+      {
+        "title": "Chapter 2",
+        "image": "images/solo-leveling.jpg",
+        "description": "Jin-Woo faces stronger monsters...",
+        "link": "#"
+      }
+    ]
+  },
+  {
+    "manhwa": "Tower of God",
+    "chapters": [
+      {
+        "title": "Chapter 1",
+        "image": "images/tower-of-god.jpg",
+        "description": "Bam enters the mysterious tower...",
+        "link": "#"
+      },
+      {
+        "title": "Chapter 2",
+        "image": "images/tower-of-god.jpg",
+        "description": "Bam takes the next test...",
+        "link": "#"
+      }
+    ]
+  },
+  {
+    "manhwa": "Noblesse",
+    "chapters": [
+      {
+        "title": "Chapter 1",
+        "image": "images/noblesse-1.jpg",
+        "description": "The awakening of Cadis Etrama Di Raizel...",
+        "link": "#"
+      },
+      {
+        "title": "Chapter 2",
+        "image": "images/noblesse-1.jpg",
+        "description": "Raizel adapts to the modern world...",
+        "link": "#"
+      }
+    ]
+  }
+]
