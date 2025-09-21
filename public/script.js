@@ -1,150 +1,45 @@
-const BACKEND_URL = "https://mangahook-backend.onrender.com"; // <-- Render URL
+const chapterListEl = document.getElementById('chapter-list');
+const imagesContainer = document.getElementById('images-container');
+const chapterTitle = document.getElementById('chapter-title');
 
-const mangaGrid = document.getElementById("manga-grid");
-const readerPanel = document.getElementById("reader-panel");
-const chapterTitle = document.getElementById("chapter-title");
-const chaptersContainer = document.getElementById("chapters-container");
-const chapterImages = document.getElementById("chapter-images");
-const prevChaptersBtn = document.getElementById("prev-chapters");
-const nextChaptersBtn = document.getElementById("next-chapters");
-const closeReaderBtn = document.getElementById("close-reader");
-const zoomInBtn = document.getElementById("zoom-in");
-const zoomOutBtn = document.getElementById("zoom-out");
+// Fetch chapters from backend
+async function loadChapters() {
+  const res = await fetch('/chapters');
+  const data = await res.json();
+  chapterListEl.innerHTML = '';
 
-let currentManga = null;
-let chaptersList = [];
-let currentChapterIndex = 0;
-let currentZoom = 1;
-
-// Load manga list
-async function loadManga() {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/mangaList`);
-    const data = await res.json();
-
-    mangaGrid.innerHTML = "";
-    data.mangaList.forEach(manga => {
-      const card = document.createElement("div");
-      card.classList.add("card");
-      card.innerHTML = `
-        <img src="${manga.image}" alt="${manga.title}">
-        <h3>${manga.title}</h3>
-      `;
-      card.addEventListener("click", () => showChapters(manga));
-      mangaGrid.appendChild(card);
-    });
-
-  } catch (err) {
-    console.error(err);
-    mangaGrid.innerHTML = "<p>Failed to load manga.</p>";
-  }
-}
-
-// Show chapters
-async function showChapters(manga) {
-  readerPanel.style.display = "flex";
-  chapterTitle.textContent = manga.title;
-  chaptersContainer.innerHTML = "<p>Loading chapters...</p>";
-  chapterImages.innerHTML = "";
-  currentManga = manga;
-
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/manga/${manga.id}/chapters`);
-    const data = await res.json();
-
-    chaptersList = data.chapters;
-    currentChapterIndex = 0;
-
-    chaptersContainer.innerHTML = "";
-    chaptersList.forEach((ch, index) => {
-      const btn = document.createElement("button");
-      btn.textContent = ch.chapter;
-      btn.addEventListener("click", () => {
-        currentChapterIndex = index;
-        loadImages(ch.url);
-        highlightActiveChapter();
-      });
-      chaptersContainer.appendChild(btn);
-    });
-
-    if (chaptersList.length > 0) {
-      loadImages(chaptersList[0].url);
-      highlightActiveChapter();
-    }
-
-  } catch (err) {
-    console.error(err);
-    chaptersContainer.innerHTML = "<p>Failed to load chapters.</p>";
-  }
-}
-
-// Load images
-async function loadImages(chapterUrl) {
-  chapterImages.innerHTML = "<p>Loading images...</p>";
-  currentZoom = 1;
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/chapterImages?url=${encodeURIComponent(chapterUrl)}`);
-    const data = await res.json();
-
-    chapterImages.innerHTML = "";
-    data.images.forEach(src => {
-      const img = document.createElement("img");
-      img.src = src;
-      img.loading = "lazy";
-      img.style.transform = `scale(${currentZoom})`;
-      chapterImages.appendChild(img);
-    });
-
-  } catch (err) {
-    console.error(err);
-    chapterImages.innerHTML = "<p>Failed to load images.</p>";
-  }
-}
-
-// Highlight active chapter
-function highlightActiveChapter() {
-  const buttons = chaptersContainer.querySelectorAll("button");
-  buttons.forEach((btn, index) => {
-    btn.classList.toggle("active", index === currentChapterIndex);
+  data.chapters.forEach(ch => {
+    const li = document.createElement('li');
+    li.textContent = ch.title;
+    li.addEventListener('click', () => loadChapterImages(ch));
+    chapterListEl.appendChild(li);
   });
 }
 
-// NEXT / PREV chapter buttons
-nextChaptersBtn.addEventListener("click", () => {
-  if (currentChapterIndex < chaptersList.length - 1) {
-    currentChapterIndex++;
-    loadImages(chaptersList[currentChapterIndex].url);
-    highlightActiveChapter();
+// Fetch images of a chapter
+async function loadChapterImages(chapter) {
+  chapterTitle.textContent = chapter.title;
+  imagesContainer.innerHTML = '<p>Loading images...</p>';
+
+  try {
+    const res = await fetch(`/chapter-images?url=${encodeURIComponent(chapter.link)}`);
+    const data = await res.json();
+
+    if (data.images && data.images.length) {
+      imagesContainer.innerHTML = '';
+      data.images.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        imagesContainer.appendChild(img);
+      });
+    } else {
+      imagesContainer.innerHTML = '<p>No images found.</p>';
+    }
+  } catch (err) {
+    imagesContainer.innerHTML = '<p>Failed to load images.</p>';
+    console.error(err);
   }
-});
-
-prevChaptersBtn.addEventListener("click", () => {
-  if (currentChapterIndex > 0) {
-    currentChapterIndex--;
-    loadImages(chaptersList[currentChapterIndex].url);
-    highlightActiveChapter();
-  }
-});
-
-// Close reader
-closeReaderBtn.addEventListener("click", () => {
-  readerPanel.style.display = "none";
-  chaptersContainer.innerHTML = "";
-  chapterImages.innerHTML = "";
-  chaptersList = [];
-  currentChapterIndex = 0;
-});
-
-// Zoom functionality
-zoomInBtn.addEventListener("click", () => {
-  currentZoom += 0.1;
-  chapterImages.querySelectorAll("img").forEach(img => img.style.transform = `scale(${currentZoom})`);
-});
-
-zoomOutBtn.addEventListener("click", () => {
-  currentZoom = Math.max(0.5, currentZoom - 0.1);
-  chapterImages.querySelectorAll("img").forEach(img => img.style.transform = `scale(${currentZoom})`);
-});
+}
 
 // Initialize
-loadManga();
+loadChapters();

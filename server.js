@@ -1,98 +1,94 @@
-import express from "express";
-import cors from "cors";
-import puppeteer from "puppeteer";
-import fs from "fs";
+import express from 'express';
+import puppeteer from 'puppeteer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static("public"));
+// Cache
+let chapterCache = { data: [], timestamp: 0 };
+const CACHE_DURATION = 5 * 60 * 1000; // 5 min
 
-// Load manga list from JSON
-const data = fs.readFileSync("./data/manga.json", "utf-8");
-const mangaList = JSON.parse(data).mangaList;
+// Serve static frontend
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Get manga list
-app.get("/api/mangaList", (req, res) => {
-  res.json({ mangaList });
-});
-
-// Get chapters for a manga
-app.get("/api/manga/:id/chapters", async (req, res) => {
-  const manga = mangaList.find(m => m.id === req.params.id);
-  if (!manga) return res.status(404).json({ error: "Manga not found" });
-
+// Puppeteer function to fetch chapters
+async function fetchChapters() {
+  let browser;
   try {
-    const browser = await puppeteer.launch({ headless: true });
+    browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
-    await page.goto(manga.url, { waitUntil: "networkidle2" });
+    await page.goto('https://weebrook.com/toon/the-player-hides-his-past-manhwa/', { waitUntil: 'networkidle2' });
 
-    // Wait for chapters list
-    await page.waitForSelector(".c-page-content .page-content-listing ul li a", { timeout: 15000 });
+    await page.waitForSelector('li.wp-manga-chapter a', { timeout: 15000 });
 
-    const chapters = await page.evaluate(() => {
-      const list = [];
-      document.querySelectorAll(".c-page-content .page-content-listing ul li a").forEach(a => {
-        list.push({
-          chapter: a.textContent.trim(),
-          url: a.href
-        });
-      });
-      return list.reverse(); // Optional: show first chapter first
-    });
+    const chapters = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('li.wp-manga-chapter a'))
+        .map(el => ({ title: el.textContent.trim(), link: el.href }))
+        .filter(ch => ch.title && ch.link)
+    );
 
-    await browser.close();
-    res.json({ chapters });
+    chapters.reverse(); // latest first
+    chapterCache.data = chapters;
+    chapterCache.timestamp = Date.now();
+    console.log(`✅ Chapters cache updated (${chapters.length} chapters)`);
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch chapters" });
+    console.error('⚠️ Failed to fetch chapters:', err.message);
+  } finally {
+    if (browser) await browser.close();
   }
-});
+}
 
-// Get images for a chapter
-app.get("/api/chapterImages", async (req, res) => {
+// Puppeteer function to fetch images of a chapter (lazy-load fix)
+async function fetchChapterImages(url) {
+  let browser;
+  try {
+    browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'networkidle2' });
+
+    // Wait for images container
+    await page.waitForSelector('.reading-content img', { timeout: 15000 });
+
+    // Get all images, including lazy-loaded
+    const images = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('.reading-content img'))
+        .map(img => img.getAttribute('data-src') || img.src)
+        .filter(src => src)
+    );
+
+    return images;
+  } catch (err) {
+    console.error('⚠️ Failed to fetch chapter images:', err.message);
+    return [];
+  } finally {
+    if (browser) await browser.close();
+  }
+}
+
+// Initialize cache and refresh periodically
+(async () => {
+  await fetchChapters();
+  setInterval(fetchChapters, CACHE_DURATION);
+})();
+
+// Routes
+app.get('/', (req, res) => res.send('🟢 Mangahook Backend is running'));
+app.get('/chapters', (req, res) => res.json({ chapters: chapterCache.data }));
+
+app.get('/chapter-images', async (req, res) => {
   const { url } = req.query;
-  if (!url) return res.status(400).json({ error: "Chapter URL required" });
+  if (!url) return res.status(400).json({ error: 'Chapter URL required' });
 
-  try {
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.goto(url, { waitUntil: "networkidle2" });
+  const images = await fetchChapterImages(url);
+  if (images.length === 0) return res.status(500).json({ error: 'No images found' });
 
-    // Scroll to load all lazy images
-    await page.evaluate(async () => {
-      const distance = 500;
-      const delay = 250;
-      let scrolled = 0;
-      const totalHeight = document.body.scrollHeight;
-      while (scrolled < totalHeight) {
-        window.scrollBy(0, distance);
-        scrolled += distance;
-        await new Promise(r => setTimeout(r, delay));
-      }
-    });
-
-    const images = await page.evaluate(() => {
-      const imgs = [];
-      document.querySelectorAll(".reading-content img").forEach(img => {
-        const src = img.getAttribute("data-src") || img.src;
-        if(src && !src.includes("thumbnail") && !src.includes("ads") && !src.includes("blank")) {
-          imgs.push(src);
-        }
-      });
-      return imgs;
-    });
-
-    await browser.close();
-    res.json({ images });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch chapter images" });
-  }
+  res.json({ images });
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));

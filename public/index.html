@@ -1,57 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Manhwa Website</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mangahook Home</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <h1>📚 My Manhwa Website</h1>
-    <p>Read your favorite manhwa with friends</p>
+    <h1>Mangahook</h1>
+    <p>Read your favorite manhwa and manga</p>
   </header>
 
-  <nav>
-    <button onclick="showPage('home')">Home</button>
-    <button onclick="showPage('latest')">Latest</button>
-  </nav>
-
-  <div class="container">
-    <div id="manga-grid" class="grid"></div>
-  </div>
-
-  <!-- Reader panel -->
-  <div id="reader-panel" class="reader-panel">
-    <div class="chapter-sidebar">
-      <h2 id="chapter-title"></h2>
-      <div class="chapter-buttons">
-        <button id="prev-chapters">Prev</button>
-        <button id="next-chapters">Next</button>
-      </div>
-      <div id="chapters-container" class="scrollable-list"></div>
-      <button id="close-reader" style="margin-top:10px;">Close Reader</button>
+  <main>
+    <div id="chapters-grid" class="grid-container">
+      <!-- Chapters will be injected here -->
     </div>
-    <div class="chapter-images-container">
-      <div class="zoom-buttons">
-        <button id="zoom-in">Zoom In</button>
-        <button id="zoom-out">Zoom Out</button>
-      </div>
-      <div id="chapter-images" class="chapter-images"></div>
-    </div>
-  </div>
-<div class="add-manga-panel">
-  <h3>Add New Manga</h3>
-  <input type="text" id="new-title" placeholder="Manga Title">
-  <input type="text" id="new-url" placeholder="Manga URL">
-  <input type="text" id="new-image" placeholder="Cover Image URL">
-  <button id="add-manga-btn">Add Manga</button>
-  <p id="add-manga-msg"></p>
-</div>
-
-  <footer>
-    <p>&copy; 2025 My Manhwa Website | Built with ❤️</p>
-  </footer>
+  </main>
 
   <script src="script.js"></script>
 </body>

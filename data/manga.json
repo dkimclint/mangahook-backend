@@ -3,14 +3,14 @@
     {
       "id": "1",
       "title": "Demon Magic Emperor",
-      "url": "https://manhuaplus.com/manga/demon-magic-emperor01",
-      "image": "https://www.redbubble.com/i/poster/Demonic-Emperor-Magic-Emperor-by-AmyLohma/65077332.LVTDI"
+      "cover": "https://example.com/demon-cover.jpg",
+      "url": "https://manhuaplus.com/manga/demon-magic-emperor01"
     },
     {
       "id": "2",
       "title": "I Am The Fated Villain",
-      "url": "https://manhuaplus.com/manga/i-am-the-fated-villain",
-      "image": "https://www.redbubble.com/i/poster/Demonic-Emperor-Magic-Emperor-by-AmyLohma/65077332.LVTDI"
+      "cover": "https://example.com/fated-villain-cover.jpg",
+      "url": "https://manhuaplus.com/manga/i-am-the-fated-villain"
     }
   ]
 }
