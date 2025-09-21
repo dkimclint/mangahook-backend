@@ -1,12 +1,12 @@
-const BACKEND_URL = "http://localhost:3000";
+const BACKEND_URL = "https://mangahook-backend.onrender.com"; // <-- Render URL
 
 const mangaGrid = document.getElementById("manga-grid");
 const readerPanel = document.getElementById("reader-panel");
 const chapterTitle = document.getElementById("chapter-title");
 const chaptersContainer = document.getElementById("chapters-container");
 const chapterImages = document.getElementById("chapter-images");
-const prevChapterBtn = document.getElementById("prev-chapter");
-const nextChapterBtn = document.getElementById("next-chapter");
+const prevChaptersBtn = document.getElementById("prev-chapters");
+const nextChaptersBtn = document.getElementById("next-chapters");
 const closeReaderBtn = document.getElementById("close-reader");
 const zoomInBtn = document.getElementById("zoom-in");
 const zoomOutBtn = document.getElementById("zoom-out");
@@ -67,7 +67,6 @@ async function showChapters(manga) {
       chaptersContainer.appendChild(btn);
     });
 
-    // Load first chapter automatically
     if (chaptersList.length > 0) {
       loadImages(chaptersList[0].url);
       highlightActiveChapter();
@@ -111,7 +110,7 @@ function highlightActiveChapter() {
 }
 
 // NEXT / PREV chapter buttons
-nextChapterBtn.addEventListener("click", () => {
+nextChaptersBtn.addEventListener("click", () => {
   if (currentChapterIndex < chaptersList.length - 1) {
     currentChapterIndex++;
     loadImages(chaptersList[currentChapterIndex].url);
@@ -119,7 +118,7 @@ nextChapterBtn.addEventListener("click", () => {
   }
 });
 
-prevChapterBtn.addEventListener("click", () => {
+prevChaptersBtn.addEventListener("click", () => {
   if (currentChapterIndex > 0) {
     currentChapterIndex--;
     loadImages(chaptersList[currentChapterIndex].url);
